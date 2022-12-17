@@ -24,6 +24,10 @@ ossbucketname="example-1234567890" #needed
 zippassword="1234567890" #needed
 zipautodelete="true" #needed
 
+#Log setting
+logfile="/home/wwwbackups/log/backup-oss.log"  #needed
+logset="false" #needed
+
 Bashdir=$(cd `dirname $0`; pwd)
 Date=$(date +%u)
 ZIP=$(which zip)
@@ -50,11 +54,13 @@ function upload_to_oss() {
     ${PYTHON} ${Bashdir}/oss.upload.py ${apiaccesskeyid} ${apiaccesskeysecret} ${ossendpoint} ${ossbucketname} ${localfile} ${cosfile}
     if [ $? -eq 0 ]; then
         echo -e "[${green}INFO${plain}] Backup ${localfile} upload to Aliyun OSS success"
+        log_outcome "[INFO] Backup ${localfile} upload to Aliyun OSS success"
         if [ "${zipautodelete}" == "true" ]; then
             rm -f ${localfile} && echo -e "[${green}INFO${plain}] Backup ${localfile} has been deleted"
         fi
     else
         echo -e "[${red}ERROR${plain}] Backup ${localfile} upload to Aliyun OSS failed, please try again!"
+        log_outcome "[ERROR] Backup ${localfile} upload to Aliyun OSS failed, please try again!"
     fi
 }
 
@@ -72,8 +78,10 @@ function backup_file() {
     ${ZIP} -P${zippassword} -9r ${backupdir}/${domain}\_${Date}\.zip ${websitedir}
     if [ $? -eq 0 ]; then
         echo -e "[${green}INFO${plain}] Zip web directory ${websitedir} success"
+        log_outcome "[INFO] Zip web directory ${websitedir} success"
     else
         echo -e "[${red}ERROR${plain}] Zip web directory ${websitedir} failed, please try again!"
+        log_outcome "[RROR] Zip web directory ${websitedir} failed, please try again!"
     fi
 
     upload_to_oss ${backupdir}/${domain}\_${Date}\.zip ${domain}\_${Date}\.zip
@@ -93,8 +101,10 @@ function backup_db() {
     ${MYSQLDUMP} -hlocalhost -u${mysqluser} -p${mysqlpassword} ${databasename} --skip-lock-tables --default-character-set=utf8 > ${backupdir}/${domain}\_db_${Date}\.sql
     if [ $? -eq 0 ]; then
         echo -e "[${green}INFO${plain}] Mysqldump database ${databasename} success"
+        log_outcome "[INFO] Mysqldump database ${databasename} success"
     else
         echo -e "[${red}ERROR${plain}] Mysqldump database ${databasename} failes, please try again!"
+        log_outcome "[ERROR] Mysqldump database ${databasename} failes, please try again!"
     fi
     if [ -f ${backupdir}/${domain}\_db_${Date}\.zip ]; then
         rm -f ${backupdir}/${domain}\_db_${Date}\.zip
@@ -102,8 +112,10 @@ function backup_db() {
     ${ZIP} -P ${zippassword} -m ${backupdir}/${domain}\_db_${Date}\.zip ${domain}\_db_${Date}\.sql
     if [ $? -eq 0 ]; then
         echo -e "[${green}INFO${plain}] Zip database ${databasename} success"
+        log_outcome "[INFO] Zip database ${databasename} success"
     else
         echo -e "[${red}ERROR${plain}] Zip database ${databasename} failed, please try again!"
+        log_outcome "[ERROR] Zip database ${databasename} failed, please try again!"
     fi
 
     upload_to_oss ${backupdir}/${domain}\_db_${Date}\.zip ${domain}\_db_${Date}\.zip
