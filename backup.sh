@@ -25,7 +25,7 @@ zippassword="1234567890" #needed
 zipautodelete="true" #needed
 
 #Log setting
-logfile="/home/wwwbackups/log/backup-oss.log"  #needed
+logdir="/home/wwwbackups/log"  #needed
 logset="false" #needed
 
 Bashdir=$(cd `dirname $0`; pwd)
@@ -45,6 +45,16 @@ function help_info() {
     echo -e " bash backup.sh --file 123.com /home/wwwroot/123.com /home/wwwbackups/123.com"
     echo -e "[${green}Backup web database${plain}]"
     echo -e " bash backup.sh --db 123.com 123.com_database root 123456 /home/wwwbackups/123.com"
+}
+
+function log_outcome() {
+    if [ "${logset}" == "true" ]; then
+        if [ ! -d ${logdir} ]; then
+            mkdir -p ${logdir}
+        fi
+
+        echo -e "$(date "+%Y-%m-%d %H:%M:%S")" "$1" >> ${logdir}/backup-oss.log
+    fi
 }
 
 function upload_to_oss() {
